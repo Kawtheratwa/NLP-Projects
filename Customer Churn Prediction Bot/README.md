@@ -1,0 +1,1 @@
+This project is a web-based Customer Churn Prediction Bot that estimates whether a customer is likely to stay or leave. Users enter their details through an Arabic chatbot interface, and the system returns an instant prediction. Built with Python, Flask, scikit-learn (Logistic Regression), pandas, and a HTML/CSS/JavaScript frontend
