@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <title>📊 Customer Churn Bot</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f4f6f9;
+        }
+
+        /* Header */
+        #header {
+            background: linear-gradient(135deg, #1abc9c, #39a6d4);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* زر البوت */
+        #open-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #39a6d4;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* صندوق البوت */
+        #bot {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 350px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            display: none;
+            overflow: hidden;
+        }
+
+        #bot-header {
+            background: #39a6d4;
+            color: white;
+            padding: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #chat {
+            height: 250px;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+
+        .user {
+            text-align: left;
+            background: #3498db;
+            color: white;
+            padding: 8px;
+            border-radius: 10px;
+            margin: 5px;
+            display: inline-block;
+        }
+
+        .bot {
+            text-align: right;
+            background: #ecf0f1;
+            padding: 8px;
+            border-radius: 10px;
+            margin: 5px;
+            display: inline-block;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-top: 1px solid #ddd;
+            outline: none;
+        }
+
+        #close {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="header">
+    📊 نظام توقع مغادرة العملاء
+</div>
+
+<div id="open-btn" onclick="openBot()">💬 ابدأ</div>
+
+<div id="bot">
+    <div id="bot-header">
+        🤖 المساعد الذكي
+        <span id="close" onclick="closeBot()">✖</span>
+    </div>
+
+    <div id="chat"></div>
+    <input id="input" placeholder="اكتب هنا..." />
+</div>
+
+<script>
+let step = 0;
+let data = {};
+let finished = false;
+
+function msg(text, type){
+    let div = document.getElementById("chat");
+    let p = document.createElement("div");
+    p.className = type;
+    p.innerText = text;
+    div.appendChild(p);
+    div.scrollTop = div.scrollHeight;
+}
+
+function start(){
+    step = 0;
+    data = {};
+    finished = false;
+    document.getElementById("chat").innerHTML = "";
+    msg("👋 أهلاً! أدخل العمر:", "bot");
+}
+
+function openBot(){
+    document.getElementById("bot").style.display = "block";
+    start();
+}
+
+function closeBot(){
+    document.getElementById("bot").style.display = "none";
+}
+
+function send(){
+    let input = document.getElementById("input");
+    let val = input.value.trim();
+    if(val === "") return;
+
+    input.value = "";
+    msg(val, "user");
+
+    if(finished){
+        if(val.includes("نعم")){
+            msg("🔄 نبدأ من جديد", "bot");
+            start();
+        } else {
+            msg("👋 شكراً لاستخدامك النظام", "bot");
+            closeBot();
+        }
+        return;
+    }
+
+    if(step === 0){
+        data.age = val;
+        msg("💰 أدخل الدخل الشهري:", "bot");
+        step++;
+    }
+    else if(step === 1){
+        data.income = val;
+        msg("📅 سنوات مع الشركة:", "bot");
+        step++;
+    }
+    else if(step === 2){
+        data.years = val;
+        msg("📦 عدد المنتجات:", "bot");
+        step++;
+    }
+    else if(step === 3){
+        data.products = val;
+        msg("💳 Credit Score:", "bot");
+        step++;
+    }
+    else if(step === 4){
+        data.score = val;
+        msg("📞 عدد مكالمات الدعم:", "bot");
+        step++;
+    }
+    else if(step === 5){
+        data.calls = val;
+
+        fetch("/predict", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(res => {
+            msg("📊 النتيجة: " + res.result, "bot");
+            msg("هل تريد تجربة أخرى؟ (نعم / لا)", "bot");
+            finished = true;
+        });
+    }
+}
+
+document.getElementById("input").addEventListener("keypress", function(e){
+    if(e.key === "Enter") send();
+});
+</script>
+
+</body>
+</html>
